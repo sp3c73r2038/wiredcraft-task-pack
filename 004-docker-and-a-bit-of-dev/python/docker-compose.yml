@@ -1,0 +1,24 @@
+---
+version: '3'
+services:
+  api:
+    container_name: wiredcraft-004-api
+    image: wiredcraft-004-api
+    restart: always
+    ports:
+    - "3000:3000"
+    links:
+    - redis-db
+    - redis-cache
+    depends_on:
+    - redis-db
+    - redis-cache
+    command: --local-config config_prod.py
+  redis-db:
+    container_name: wiredcraft-004-redis-db
+    image: redis:alpine
+    restart: always
+  redis-cache:
+    container_name: wiredcraft-004-redis-cache
+    image: redis:alpine
+    restart: always

@@ -1,0 +1,5 @@
+{
+    "storage-driver": "overlay2",
+    "registry-mirrors": ["http://172.20.1.10:3129"],
+    "experimental": true
+}

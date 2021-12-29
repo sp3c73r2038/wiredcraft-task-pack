@@ -45,6 +45,12 @@ $ /path/to/pyx ansible
 
 Assume we are using a server running Debian system with MySQL as database.
 
+Remote server with Debian system should meet this requirements
+
+- remote SSH non-root user has been setup and has permission to sudo
+- remote SSH non-root user is in `docker` group to interactive with docker service
+- system has python interpreter to run ansible task
+
 We need to at least these software.
 
 - docker for running API application
@@ -68,8 +74,6 @@ Host db-server
   User <actual user>
   Port <actual port>
 ```
-
-*Note: ssh user in this example should have sudo permission to install packages and in docker group to interact with docker service.*
 
 ## Quick Start
 

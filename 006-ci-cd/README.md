@@ -10,6 +10,10 @@ See `.github/workflows/`
 
 Deploying is using ansible, playbook is in this folder.
 
+Visit GitHub Repo action page to see results in action.
+
+Note: the `deploy` workflow is for demonstration purpose, can not run without proper environment.
+
 ## Quick Start
 
 All credential and password is protected by `ansible-vault`.

@@ -1,6 +1,6 @@
 Hi, here's my deliverable code repo.
 
-If you run into any issues, just let me know.
+If you run into any issues, feel free to let me know.
 
 ## Basic Info
 

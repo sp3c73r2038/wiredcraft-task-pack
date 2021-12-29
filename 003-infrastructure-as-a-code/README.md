@@ -1,6 +1,7 @@
 ## Environment
 
 - terraform v1.1.2
+- terraform alicloud provider plugin hashicorp/alicloud v1.149.0 (automatically installed with `terraform init`)
 
 ## Basic Info
 
@@ -14,20 +15,21 @@ To generate a real ssh key pair.
 ```bash
 $ ssh-keygen -t ed25519 -C -f id_ed25519
 
-# use public key in ssh.tf
+# use public key in production.tf ``ssh_public_key = "..."''
 $ cat id_ed25519.pub
 ```
 
 file content
 
-```
-.
-├── README.md
-├── security.tf    # Security group & rules
-├── server.tf      # ECS server definition
-├── ssh.tf         # SSH key
-├── vars.tf        # API key
-└── vpc.tf         # Network
-```
-
 ## Quick Start
+
+```
+# initialize provider plugin
+$ terraform init
+
+# plan phase & check output
+$ make plan
+
+# apply phase
+$ make apply
+```

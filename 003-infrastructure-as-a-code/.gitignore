@@ -1,0 +1,8 @@
+*.tfstate
+*.backup
+/production.tfvars
+/terra-plan
+/.terraform/
+/data/
+*.hcl
+*.info

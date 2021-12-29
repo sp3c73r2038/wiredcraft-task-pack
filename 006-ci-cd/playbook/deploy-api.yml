@@ -1,7 +1,7 @@
 - hosts: api
   tasks:
   - name: 'deploy api container using docker'
-    ansible.community.docker_container:
+    ansible.builtin.docker_container:
       name: wiredcraft-task-api-python
       pull: yes
       image: wiredcraft-task-api-python:lastest

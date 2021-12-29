@@ -13,7 +13,7 @@ Hugo theme named [Even](https://themes.gohugo.io/themes/hugo-theme-even/) is emb
 
 ## Quick Start
 
-For most situation, I prefer using `make`. To demostrating my ability to write script, a Python version is also provided.
+For most situation, I prefer using `make`. To demonstrate my ability to write script, a Python version is also provided.
 
 ### Makefile version
 

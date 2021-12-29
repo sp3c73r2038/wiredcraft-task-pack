@@ -1,0 +1,18 @@
+- hosts: api
+  tasks:
+  - name: 'deploy api container using docker'
+    ansible.community.docker_container:
+      name: wiredcraft-task-api-python
+      pull: yes
+      image: wiredcraft-task-api-python:lastest
+      recreate: yes
+      restart_policy: yes
+      state: started
+      ports:
+      - "3000:3000"
+      env:
+        DATABASE_URL: '{{ database_url }}'
+        DATABASE_USERNAME: '{{ database_username }}'
+        DATABASE_PASSWORD: '{{ database_password }}'
+      # cpu_quota:
+      # memory:

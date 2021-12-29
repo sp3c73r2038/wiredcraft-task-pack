@@ -1,7 +1,6 @@
 ## Environment
 
-- OS: Gentoo Linux
-- Ansible
+- Ansible 4.8
 
 All python package is installed using virtualenv and [Pipenv](https://pipenv-fork.readthedocs.io/en/latest/basics.html).
 
@@ -81,7 +80,7 @@ All credential and password is protected by `ansible-vault`.
 To use them, provide a password file
 
 ```bash
-# This password is actually used for demostrating purpose
+# This password is actually used for demonstrating purpose
 $ echo 'ThisIsMyVaultS3cr37' > vault-password.txt
 ```
 

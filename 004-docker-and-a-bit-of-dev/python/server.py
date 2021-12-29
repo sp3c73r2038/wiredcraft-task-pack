@@ -4,6 +4,7 @@ import json
 import logging
 import pprint
 import sys
+import time
 
 import flask
 import os.path
@@ -12,11 +13,6 @@ import redis
 LOGGER = logging.getLogger(__name__)
 
 server = flask.Flask(__name__)
-CACHE = redis.StrictRedis()
-DB = redis.StrictRedis()
-CACHE_KEY = 'wiredcraft-task-004-cache'
-DB_KEY = 'wiredcraft-task-004-db'
-
 def setupLogging(debug, loggerConfig=None):
 
     lvl = logging.INFO
@@ -47,6 +43,97 @@ def setupLogging(debug, loggerConfig=None):
         for k, v in loggerConfig.items():
             logging.getLogger(k).setLevel(v)
 
+
+class ICache:
+    """
+    Cache Interface
+    """
+    def get(self, k):
+        raise NotImplementedError()
+    def put(self, k, v, expiry):
+        raise NotImplementedError()
+
+class IDatabase:
+    """
+    Database Interface
+    """
+    def get(self, k):
+        raise NotImplementedError()
+    def put(self, k, v):
+        raise NotImplementedError()
+
+class MemoryCache:
+    """
+    In-Memory Cache Implementation, for testing purpose
+    """
+    def __init__(self):
+        self.store = {}
+
+    def get(self, k):
+        d = self.store.get(k)
+        if d and d['timestamp'] < time.time():
+            return d['data']
+
+    def put(self, k, v, expiry=None):
+        ts = 1e10
+        if expiry:
+            ts = time.time() + expiry
+        d = {
+            'timestamp': ts,
+            'data': v
+        }
+        self.store[k] = d
+
+class MemoryDB:
+    """
+    In-Memory Database Implementation, for testing purpose
+    """
+    def __init__(self):
+        self.store = {}
+
+    def get(self, k):
+        return self.store.get(k)
+
+    def put(self, k, v):
+        self.store[k] = v
+
+class RedisCache:
+    """
+    Cache Implementation using Redis
+    """
+    def __init__(self, url, socket_timeout=10):
+        self.client = redis.StrictRedis.from_url(
+            url, socket_timeout=socket_timeout)
+
+    def get(self, k):
+        return self.client.get(k)
+
+    def put(self, k, v, expiry=None):
+        if expiry:
+            self.client.setex(k, expiry, v)
+        else:
+            self.client.set(k, v)
+
+class RedisDB:
+    """
+    DB Implementation using Redis
+    """
+    def __init__(self, url, socket_timeout=10):
+        self.client = redis.StrictRedis.from_url(
+            url, socket_timeout=socket_timeout)
+
+    def get(self, k):
+        return self.client.get(k)
+
+    def put(self, k, v):
+        self.client.set(k, v)
+
+
+CACHE = ICache()
+DB = IDatabase()
+CACHE_KEY = 'wiredcraft-task-004-cache'
+DB_KEY = 'wiredcraft-task-004-db'
+
 @server.route('/')
 def index():
     return flask.jsonify({'msg': 'hello'})
@@ -64,7 +151,7 @@ def read():
         cacheHit = 'Miss'
         name = DB.get(DB_KEY)
         # don't forget to set cache
-        CACHE.setex(CACHE_KEY, server.config['CACHE_TTL'], name)
+        CACHE.put(CACHE_KEY, name, server.config['CACHE_TTL'])
 
     name = name.decode()
 
@@ -90,10 +177,10 @@ def write():
     name = str(data.get('name'))
 
     # write database
-    DB.set(DB_KEY, name)
+    DB.put(DB_KEY, name)
 
     # set cache
-    CACHE.setex(CACHE_KEY, server.config['CACHE_TTL'], name)
+    CACHE.put(CACHE_KEY, name, server.config['CACHE_TTL'])
 
     return flask.jsonify({'msg': 'update ok'})
 
@@ -124,16 +211,14 @@ def main():
     LOGGER.info("--- config: \n%s", pprint.pformat(server.config))
 
     # setup redis cache
-    CACHE = redis.StrictRedis.from_url(
-        server.config['CACHE_REDIS_URL'], socket_timeout=10)
+    CACHE = RedisCache(server.config['CACHE_REDIS_URL'])
 
     # setup redis db
-    DB = redis.StrictRedis.from_url(
-        server.config['DB_REDIS_URL'], socket_timeout=10)
+    DB = RedisDB(server.config['DB_REDIS_URL'])
 
     # write data into database
     LOGGER.info(">> initialize data into database")
-    DB.set(DB_KEY, 'John Doe')
+    DB.put(DB_KEY, 'John Doe')
 
     server.run(options.bind, port=options.port, threaded=True)
 

@@ -1,0 +1,75 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db
+  labels:
+    app: db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: db
+  template:
+    metadata:
+      labels:
+        app: db
+    spec:
+      # imagePullSecrets: ''
+      containers:
+      - name: hello
+        image: mysql:5.6
+        imagePullPolicy: IfNotPresent
+        ports:
+          - name: mysql
+            containerPort: 3306
+            protocol: TCP
+        readinessProbe:
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          tcpSocket:
+            port: mysql
+        livenessProbe:
+          initialDelaySeconds: 15
+          periodSeconds: 20
+          tcpSocket:
+            port: mysql
+        resources:
+          requests:
+            cpu: 300m
+            memory: 200Mi
+          limits:
+            cpu: 500m
+            memory: 500Mi
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql
+              key: root_password
+        - name: CLUSTER_NAME
+          value: prod
+        # for logging facility working in alicloud environment
+        - name: aliyun_logs_k8slog
+          value: "stdout"
+        - name: aliyun_logs_k8slog_tags
+          value: "env=prod"
+        - name: aliyun_logs_k8slog_format
+          value: "json"
+        workingDir: /app
+        volumeMounts:
+        - name: timezone
+          mountPath: /etc/localtime
+        - name: data
+          mountPath: /var/lib/mysql
+      volumes:
+      - name: timezone
+        hostPath:
+          path: /usr/share/zoneinfo/Asia/Shanghai
+      - name: data
+        persistentVolumeClaim:
+          claimName: db-pvc
+      ## if any
+      # nodeSelector:
+      # affinity:
+      # tolerations:

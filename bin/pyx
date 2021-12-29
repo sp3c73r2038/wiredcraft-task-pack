@@ -1,0 +1,87 @@
+#!/bin/bash
+# set -x
+
+function log() {
+  ts=$(date +%Y-%m-%d_%T,%6N)
+  level=$1
+  shift 1
+  case $level in
+  (err*)
+    echo ${ts} [ERROR]: $* 1>&2
+    ;;
+  (info*)
+    echo ${ts} [INFO]: $* 1>&2
+    ;;
+  (debug*)
+    echo ${ts} [DEBUG] $* 1>&2
+    ;;
+  (*)
+    echo ${ts} [${level}] $* 1>&2
+    ;;
+  esac
+}
+
+function find_venv() {
+  if [[ -d "${1}/local" && -x "${1}/local/bin/python" ]]; then
+    echo "${1}/local"
+    return
+  fi
+  if [[ -d "${1}/.virtualenv" && -x "${1}/.virtualenv/bin/python" ]]; then
+    echo "${1}/.virtualenv"
+    return
+  fi
+  if [[ -d "${1}/.venv" && -x "${1}/.venv/bin/python" ]]; then
+    echo "${1}/.venv"
+    return
+  fi
+}
+
+dir="$(pwd)/something"
+while [[ $dir != "/" ]];
+do
+  dir=$(dirname $dir)
+  venv=$(find_venv $dir)
+  if [[ ! -z ${venv} ]]; then
+    break
+  fi
+  if [[ $dir == "/" ]]; then
+    break
+  fi
+done
+
+if [[ -z $venv ]]; then
+  echo "venv not found, create?"
+  read yes
+  if [[ $yes == "y"* ]]; then
+    dir=${PYX_VENV:-local}
+    echo "create venv ${dir}"
+    python3 -m venv $dir
+    venv=${dir}
+  fi
+fi
+
+if [[ -z $1 ]]; then
+  if [[ -d ${venv} && -f requirements.txt ]]; then
+    bin=${venv}/bin/pip
+    exec ${bin} install -r requirements.txt
+  fi
+  echo "usage: pyx <command> [args...]"
+  exit 1
+fi
+
+
+if [[ -z ${venv} ]]; then
+  log warn "cannot find any virtualenv!"
+  exec $@
+else
+  log info "using virtualenv at \"${venv}\""
+  bin=${venv}/bin/${1}
+  if [[ -x ${bin} ]]; then
+    log info "found executable \"${bin}\""
+    shift 1
+    exec ${bin} "$@"
+  else
+    echo "\"${bin}\" not found"
+    exit 1
+  fi
+fi

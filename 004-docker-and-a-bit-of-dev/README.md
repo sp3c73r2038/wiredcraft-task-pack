@@ -17,4 +17,4 @@
 
 Fill the content of `openapi.yml` into https://editor.swagger.io/ to read API doc.
 
-`cd` into implemented folder and follow the coresponding `README`.
+`cd` into implemented folder and follow the corresponding `README`.

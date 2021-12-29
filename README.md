@@ -4,7 +4,7 @@ If you run into any issues, just let me know.
 
 ## Basic Info
 
-Task deliverable is splitted into coresponding folder.
+Task deliverable is splitted into corresponding folder.
 
 ## General Environment
 

@@ -11,10 +11,10 @@
 ## File Content
 
 ```
-├── go          # go implementation
-├── node        # nodejs implementation
 ├── python      # python implementation
-└── swagger.yml # swagger definition for API service
+└── openapi.yml # OpenAPI definition for API service
 ```
+
+Fill the content of `openapi.yml` into https://editor.swagger.io/ to read API doc.
 
 `cd` into implemented folder and follow the coresponding `README`.

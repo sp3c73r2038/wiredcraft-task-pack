@@ -1,0 +1,55 @@
+openapi: 3.0.0
+info:
+  version: "1.0.0"
+  title: "Demo API"
+  contact:
+    email: "nobody@nowhere.org"
+  license:
+    name: "GPL v2"
+    
+servers:
+- url: "http://localhost:3000" 
+  description: "local test server"
+paths:
+  /welcome:
+    get:
+      summary: "get a welcome message"
+      operationId: "get"
+      responses:
+        "200":
+          description: "operation ok"
+          headers:
+            X-Cache:
+              description: "indicate whether value is fetched from cache"
+              schema:
+                type: string
+                example: "Hit"
+          content:
+            text/plain:
+              schema:
+                type: "string"
+                example: "Hello, <Name>"
+    put:
+      summary: "set name"
+      operationId: "update"
+      requestBody:
+        description: "Pet object that needs to be added to the store"
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              properties:
+                msg: 
+                  type: "string"
+      responses:
+        "400":
+          description: "Invalid JSON or Missing Arguments"
+        "200":
+          description: "update ok"
+          content:
+            application/json:
+              schema:
+                type: object
+                example: {"msg": "update ok"}
+              

@@ -1,27 +1,91 @@
 ---
+
+
 # initialize for api server
 - hosts: api
   tasks:
-  - name: 'example'
-    ansible.builtin.shell: 'date'
   - name: 'install docker'
     ansible.builtin.package:
       name: ['docker.io']
       state: present
-# - name: 'upload docker config'
-#   ansible.builtin.:
-
+  # upload docker daemon config if needed
+  - name: 'upload docker config'
+    ansible.builtin.copy:
+      src: assets/docker-daemon.json
+      dest: /etc/docker/daemon.json
+      owner: root
+      group: root
+      mode: 0644
+    notify: 'docker-config-changed'
+  - meta: flush_handlers
   # NOTE: docker basic configuration file, like storage-driver, registry-mirrors
   - name: 'install nginx'
     ansible.builtin.package:
-      name: ['nginx']
+      name: ['nginx-extras']
       state: present
+  - name: 'remove default nginx site'
+    ansible.builtin.file:
+      path: /etc/nginx/sites-enabled/default
+      state: absent
+    notify: 'nginx-config-changed'
+  - name: 'upload nginx config'
+    ansible.builtin.copy:
+      src: assets/nginx.conf
+      dest: /etc/nginx/nginx.conf
+      owner: root
+      group: root
+      mode: 0644
+    notify: 'nginx-config-changed'
+  - name: 'upload nginx site config'
+    ansible.builtin.copy:
+      src: assets/nginx-site.conf
+      dest: /etc/nginx/sites-enabled/default.conf
+      owner: root
+      group: root
+      mode: 0644
+    notify: 'nginx-config-changed'
+  - meta: flush_handlers
+  # handlers
+  handlers:
+  - name: 'docker-config-changed'
+    # restart docker service if config is changed
+    ansible.builtin.service:
+      name: docker
+      state: restarted
+  - name: 'nginx-config-changed'
+    # reload nginx if config is changed
+    ansible.builtin.service:
+      name: nginx
+      state: reloaded
+
 # initialize for database server
-- hosts: api
+- hosts: db
   tasks:
-  - name: 'example'
-    shell: 'date'
   - name: 'install mysql'
     ansible.builtin.package:
-      name: 'mariadb'
+      name:
+      - 'mariadb-server'
+      - 'python3-pymysql' # in order to manage mysql db/user via ansible
       state: present
+  - name: 'create database'
+    ansible.builtin.mysql_db:
+      name: '{{ db_name }}'
+      state: present
+      login_user: '{{ mysql_admin_username }}'
+      login_password: '{{ mysql_admin_password }}'
+      login_unix_socket: '/var/run/mysqld/mysqld.sock'
+  - name: 'create db user'
+    ansible.builtin.mysql_user:
+      name: '{{ mysql_username }}'
+      password: '{{ mysql_password }}'
+      priv: '{{ db_name }}.*:ALL'
+      state: present
+      login_user: '{{ mysql_admin_username }}'
+      login_password: '{{ mysql_admin_password }}'
+      login_unix_socket: '/var/run/mysqld/mysqld.sock'
+  - name: 'check user & database'
+    ansible.builtin.mysql_info:
+      login_user: '{{ mysql_username }}'
+      login_password: '{{ mysql_password }}'
+      login_db: '{{ db_name }}'
+      filter: ['databases']

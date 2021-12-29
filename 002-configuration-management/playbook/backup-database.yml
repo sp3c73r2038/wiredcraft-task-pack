@@ -1,0 +1,16 @@
+- name: 'backup dump file for database'
+  hosts: db
+  vars:
+    ymd: "{{ lookup('pipe', 'date +\"%Y-%m-%d\"') }}"
+    dump_filename: "{{ db_name }}_{{ ymd }}.sql"
+  tasks:
+  - name: 'dump database'
+    ansible.builtin.mysql_db:
+      state: dump
+      name: '{{ db_name }}'
+      target: '{{ dump_path }}/{{ dump_filename }}'
+      login_unix_socket: '/var/run/mysqld/mysqld.sock'
+  - name: 'compress dump file'
+    ansible.builtin.shell:
+      cmd: 'gzip -1 {{ dump_filename }}'
+      chdir: '{{ dump_path }}'

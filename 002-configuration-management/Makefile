@@ -4,6 +4,7 @@ VENV := .venv
 VENV_PY := $(VENV)/bin/python
 PYPI := https://mirrors.163.com/pypi/simple
 ANSIBLE_PLAYBOOK := .venv/bin/ansible-playbook
+VERBOSE :=
 
 -include local.mk
 
@@ -19,13 +20,13 @@ setup: .venv
 	PIPENV_VENV_IN_PROJECT=1 $(VENV_PY) -m pipenv install -v
 
 init:
-	$(ANSIBLE_PLAYBOOK) --vault-password-file $(PASSWD_FILE) \
+	$(ANSIBLE_PLAYBOOK) $(VERBOSE) --vault-password-file $(PASSWD_FILE) \
 		-i hosts.yml playbook/init-server.yml
 
 deploy:
-	$(ANSIBLE_PLAYBOOK) --vault-password-file $(PASSWD_FILE) \
-		-i hosts.yml playbook/service-deploy.yml
+	$(ANSIBLE_PLAYBOOK) $(VERBOSE) --vault-password-file $(PASSWD_FILE) \
+		-i hosts.yml playbook/deploy-service.yml
 
 backup:
-	$(ANSIBLE_PLAYBOOK) --vault-password-file $(PASSWD_FILE) \
+	$(ANSIBLE_PLAYBOOK) $(VERBOSE) --vault-password-file $(PASSWD_FILE) \
 		-i hosts.yml playbook/backup-database.yml

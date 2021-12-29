@@ -1,0 +1,25 @@
+name: deploy-api-application
+on:
+  workflow_dispatch: {}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Run playbook
+    # NOTE: better fork to our own repo to keep long term availability
+    uses: dawidd6/action-ansible-playbook@v2
+    with:
+      # Required, playbook filepath
+      playbook: playbook/deploy-api.yml
+      # Optional, directory where playbooks live
+      directory: 006-ci-cd
+      # Optional, SSH private key
+      key: ${{secrets.SSH_PRIVATE_KEY}}
+      # # Optional, SSH known hosts file content
+      # known_hosts: .known_hosts
+      vault_password: ${{secrets.VAULT_PASSWORD}}
+      # Optional, additional flags to pass to ansible-playbook
+      options: |
+        -i hosts.yml
+        --verbose

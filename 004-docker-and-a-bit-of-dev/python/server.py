@@ -71,7 +71,7 @@ class MemoryCache:
 
     def get(self, k):
         d = self.store.get(k)
-        if d and d['timestamp'] < time.time():
+        if d and d['timestamp'] >= time.time():
             return d['data']
 
     def put(self, k, v, expiry=None):
@@ -153,7 +153,8 @@ def read():
         # don't forget to set cache
         CACHE.put(CACHE_KEY, name, server.config['CACHE_TTL'])
 
-    name = name.decode()
+    if isinstance(name, bytes):
+        name = name.decode()
 
     resp = flask.make_response('Hello, {}'.format(name))
     resp.headers['X-CACHE'] = cacheHit
@@ -169,7 +170,10 @@ def write():
         return flask.abort(
             400, 'invalid Content-Type, should be application/json')
 
-    data = json.loads(flask.request.data)
+    try:
+        data = json.loads(flask.request.data)
+    except ValueError:
+        return flask.abort(400, 'invalid JSON')
 
     if not isinstance(data, dict) or not data.get('name'):
         return flask.abort(400, 'missing args name or invalid data type')
@@ -184,8 +188,24 @@ def write():
 
     return flask.jsonify({'msg': 'update ok'})
 
-def main():
+def init():
+    """
+    setup cache and database
+    """
     global CACHE, DB
+    if server.config['UNIT_TEST']:
+        # use in-memory implementation for testing purpose
+        CACHE = MemoryCache()
+        DB = MemoryDB()
+    else:
+        CACHE = RedisCache(server.config['CACHE_REDIS_URL'])
+        DB = RedisDB(server.config['DB_REDIS_URL'])
+
+    # write data into database
+    LOGGER.info(">> initialize data into database")
+    DB.put(DB_KEY, 'John Doe')
+
+def main():
 
     ap = argparse.ArgumentParser()
     ap.add_argument('--debug', action='store_true')
@@ -210,15 +230,8 @@ def main():
     LOGGER.info("--- options: \n%s", pprint.pformat(options))
     LOGGER.info("--- config: \n%s", pprint.pformat(server.config))
 
-    # setup redis cache
-    CACHE = RedisCache(server.config['CACHE_REDIS_URL'])
-
-    # setup redis db
-    DB = RedisDB(server.config['DB_REDIS_URL'])
-
-    # write data into database
-    LOGGER.info(">> initialize data into database")
-    DB.put(DB_KEY, 'John Doe')
+    # init global context
+    init()
 
     server.run(options.bind, port=options.port, threaded=True)
 
